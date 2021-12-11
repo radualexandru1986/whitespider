@@ -11,13 +11,15 @@ class BooksController extends Controller
 {
 
     /**
-     * @return Book[]|\Illuminate\Database\Eloquent\Collection
+     * @param Request $request
+     * @param BookRefinery $book
+     * @return mixed
      */
-    public function getAllBooks(Request $request)
+    public function getAllBooks(Request $request): mixed
     {
-        $property = $request->get('by') ?? 'title';
-        $books = Book::orderBy($property);
-        return $books->paginate();
+        $query = $request->get('by') ?? 'title';
+        return Book::with('genre')->orderBy($query)->paginate();
+
     }
 
     /**
@@ -26,11 +28,11 @@ class BooksController extends Controller
      * @param Request $request
      * @return JsonResponse|string
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse|string
     {
         $request->validate([
             'title' => 'required',
-            'genre' => 'required',
+            'genre_id' => 'required',
             'author' => 'required',
         ]);
         try {
@@ -47,18 +49,18 @@ class BooksController extends Controller
      *
      * @return JsonResponse|string
      */
-    public function update(int $id, Request $request):JsonResponse
+    public function update(int $id, Request $request): JsonResponse|string
     {
         $request->validate([
             'title' => 'required',
-            'genre' => 'required',
+            'genre_id' => 'required',
             'author' => 'required',
         ]);
         $book = Book::find($id);
         try {
             $book->title = $request->get('title');
             $book->author = $request->get('author');
-            $book->genre = $request->get('genre');
+            $book->genre_id = $request->get('genre_id');
             $book->available = $request->get('available');
             $book->save();
 
@@ -75,7 +77,7 @@ class BooksController extends Controller
      * @param $id
      * @return JsonResponse|string
      */
-    public function delete($id)
+    public function delete($id): JsonResponse|string
     {
         try {
             Book::find($id)->delete();
